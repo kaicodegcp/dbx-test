@@ -11,8 +11,9 @@
 data "aws_caller_identity" "current" {}
 
 data "databricks_aws_assume_role_policy" "cross_account" {
-  provider    = databricks.account
-  external_id = var.databricks_account_id
+  provider      = databricks.account
+  external_id   = var.databricks_account_id
+  aws_partition = local.assume_role_partition
 }
 
 data "databricks_aws_assume_role_policy" "log_delivery" {
