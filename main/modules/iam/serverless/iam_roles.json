@@ -1,0 +1,5 @@
+{
+  "description": "IAM Roles required for Databricks Serverless workspace deployment",
+  "roles": [],
+  "notes": "Databricks Serverless deployments do NOT require customer-managed IAM roles for compute. Databricks fully manages the serverless compute infrastructure. IAM concerns are limited to S3 bucket policies and KMS key policies that grant the Databricks AWS account access to customer storage and encryption keys."
+}

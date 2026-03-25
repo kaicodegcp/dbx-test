@@ -1,0 +1,172 @@
+{
+  "description": "IAM Policies required for Databricks Classic (Custom VPC) workspace deployment",
+  "policies": [
+    {
+      "policy_name": "${resource_prefix}-cross-account-policy",
+      "description": "Databricks cross-account policy with full EC2 and networking permissions (SRA-aligned)",
+      "type": "managed-policy",
+      "attached_to": "${resource_prefix}-cross-account role",
+      "statements": [
+        {
+          "sid": "CreateEC2ResourcesWithRequestTag",
+          "effect": "Allow",
+          "actions": [
+            "ec2:CreateFleet",
+            "ec2:CreateLaunchTemplate",
+            "ec2:CreateLaunchTemplateVersion",
+            "ec2:CreateVolume",
+            "ec2:RequestSpotInstances",
+            "ec2:RunInstances"
+          ],
+          "resources": [
+            "arn:aws:ec2:${region}:${aws_account_id}:volume/*",
+            "arn:aws:ec2:${region}:${aws_account_id}:instance/*",
+            "arn:aws:ec2:${region}:${aws_account_id}:fleet/*",
+            "arn:aws:ec2:${region}:${aws_account_id}:launch-template/*",
+            "arn:aws:ec2:${region}:${aws_account_id}:network-interface/*"
+          ],
+          "condition": "aws:RequestTag/Vendor = Databricks"
+        },
+        {
+          "sid": "AllowDatabricksTagOnCreate",
+          "effect": "Allow",
+          "actions": ["ec2:CreateTags"],
+          "resources": ["EC2 volumes, instances, launch-templates, fleets, network-interfaces"],
+          "condition": "ec2:CreateAction in [CreateFleet, CreateLaunchTemplate, CreateVolume, RequestSpotInstances, RunInstances] AND aws:RequestTag/Vendor = Databricks"
+        },
+        {
+          "sid": "ModifyEC2ResourcesByResourceTags",
+          "effect": "Allow",
+          "actions": [
+            "ec2:AssignPrivateIpAddresses",
+            "ec2:AssociateIamInstanceProfile",
+            "ec2:AttachVolume",
+            "ec2:CancelSpotInstanceRequests",
+            "ec2:CreateLaunchTemplateVersion",
+            "ec2:DetachVolume",
+            "ec2:DisassociateIamInstanceProfile",
+            "ec2:ModifyFleet",
+            "ec2:ModifyLaunchTemplate",
+            "ec2:RequestSpotInstances",
+            "ec2:CreateFleet",
+            "ec2:CreateLaunchTemplate",
+            "ec2:CreateVolume",
+            "ec2:RunInstances"
+          ],
+          "resources": ["EC2 instances, volumes, network-interfaces, launch-templates, fleets, spot-instance-requests"],
+          "condition": "ec2:ResourceTag/Vendor = Databricks"
+        },
+        {
+          "sid": "GetEC2LaunchTemplateDataByTag",
+          "effect": "Allow",
+          "actions": ["ec2:GetLaunchTemplateData"],
+          "resources": ["EC2 volumes, instances, fleets"],
+          "condition": "ec2:ResourceTag/Vendor = Databricks"
+        },
+        {
+          "sid": "DescribeEC2Resources",
+          "effect": "Allow",
+          "actions": [
+            "ec2:DescribeAvailabilityZones",
+            "ec2:DescribeFleetHistory",
+            "ec2:DescribeFleetInstances",
+            "ec2:DescribeVpcAttribute",
+            "ec2:DescribeFleets",
+            "ec2:DescribeIamInstanceProfileAssociations",
+            "ec2:DescribeInstanceStatus",
+            "ec2:DescribeInstances",
+            "ec2:DescribeInternetGateways",
+            "ec2:DescribeLaunchTemplates",
+            "ec2:DescribeLaunchTemplateVersions",
+            "ec2:DescribeNatGateways",
+            "ec2:DescribeNetworkAcls",
+            "ec2:DescribePrefixLists",
+            "ec2:DescribeReservedInstancesOfferings",
+            "ec2:DescribeRouteTables",
+            "ec2:DescribeSecurityGroups",
+            "ec2:DescribeSpotInstanceRequests",
+            "ec2:DescribeSpotPriceHistory",
+            "ec2:DescribeSubnets",
+            "ec2:DescribeVolumes",
+            "ec2:DescribeVpcs",
+            "ec2:GetSpotPlacementScores"
+          ],
+          "resources": ["*"]
+        },
+        {
+          "sid": "DeleteEC2ResourcesByTag",
+          "effect": "Allow",
+          "actions": [
+            "ec2:DeleteFleets",
+            "ec2:DeleteLaunchTemplate",
+            "ec2:DeleteLaunchTemplateVersions",
+            "ec2:DeleteTags",
+            "ec2:DeleteVolume",
+            "ec2:TerminateInstances"
+          ],
+          "resources": ["EC2 instances, volumes, network-interfaces, launch-templates, fleets, spot-instance-requests"],
+          "condition": "ec2:ResourceTag/Vendor = Databricks"
+        },
+        {
+          "sid": "AllowEC2TaggingOnDatabricksResources",
+          "effect": "Allow",
+          "actions": ["ec2:CreateTags", "ec2:DeleteTags"],
+          "resources": ["EC2 instances, volumes, network-interfaces, launch-templates, fleets, spot-instance-requests"],
+          "condition": "ec2:ResourceTag/Vendor = Databricks"
+        },
+        {
+          "sid": "VpcNonresourceSpecificActions",
+          "effect": "Allow",
+          "actions": [
+            "ec2:AuthorizeSecurityGroupEgress",
+            "ec2:AuthorizeSecurityGroupIngress",
+            "ec2:RevokeSecurityGroupEgress",
+            "ec2:RevokeSecurityGroupIngress"
+          ],
+          "resources": ["Workspace security group scoped to VPC"],
+          "condition": "ec2:vpc = workspace VPC ARN"
+        },
+        {
+          "sid": "RestrictAMIUsageToDatabricksDeny",
+          "effect": "Deny",
+          "actions": ["ec2:RunInstances", "ec2:CreateFleet", "ec2:RequestSpotInstances"],
+          "resources": ["arn:aws:ec2:*:*:image/*"],
+          "condition": "ec2:Owner != Databricks EC2 image account"
+        },
+        {
+          "sid": "RestrictAMIUsageToDatabricksAllow",
+          "effect": "Allow",
+          "actions": ["ec2:RunInstances", "ec2:CreateFleet", "ec2:RequestSpotInstances"],
+          "resources": ["arn:aws:ec2:*:*:image/*"],
+          "condition": "ec2:Owner = Databricks EC2 image account"
+        },
+        {
+          "sid": "AllowRunInstancesWithScopedResources",
+          "effect": "Allow",
+          "actions": ["ec2:RunInstances"],
+          "resources": ["Subnets and security groups scoped to workspace VPC"],
+          "condition": "ec2:vpc = workspace VPC ARN"
+        },
+        {
+          "sid": "IAMRoleForEC2Spot",
+          "effect": "Allow",
+          "actions": ["iam:CreateServiceLinkedRole"],
+          "resources": ["arn:aws:iam::*:role/aws-service-role/spot.amazonaws.com/AWSServiceRoleForEC2Spot"],
+          "condition": "iam:AWSServiceName = spot.amazonaws.com"
+        }
+      ],
+      "source_module": "complete-workspace-custom (module.iam_policy_databricks)"
+    },
+    {
+      "policy_name": "${resource_prefix}-unity-catalog-policy",
+      "description": "Unity Catalog S3 and KMS access policy. Content generated by databricks_aws_unity_catalog_policy data source.",
+      "type": "managed-policy",
+      "attached_to": "${resource_prefix}-catalog-role",
+      "permissions_summary": [
+        "s3:GetObject, s3:PutObject, s3:DeleteObject, s3:ListBucket, s3:GetBucketLocation on catalog bucket",
+        "kms:Decrypt, kms:Encrypt, kms:GenerateDataKey* on catalog KMS key"
+      ],
+      "source_module": "complete-workspace-custom (module.iam_policy_unity_catalog)"
+    }
+  ]
+}

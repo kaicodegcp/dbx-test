@@ -1,0 +1,34 @@
+{
+  "description": "IAM Roles required for Databricks Classic (Custom VPC) workspace deployment",
+  "roles": [
+    {
+      "role_name": "${resource_prefix}-cross-account",
+      "description": "Databricks cross-account role assumed by the Databricks control plane to manage EC2 instances, volumes, fleets, launch templates, and networking for Classic compute clusters.",
+      "type": "cross-account",
+      "trust_entity": "Databricks AWS Account (414351767826 for commercial, 044793339203 for GovCloud civilian, 170661010020 for GovCloud DoD)",
+      "attached_policies": [
+        "${resource_prefix}-cross-account-policy"
+      ],
+      "source_module": "complete-workspace-custom (module.iam_assumable_role_databricks)"
+    },
+    {
+      "role_name": "${resource_prefix}-audit-log-delivery-role",
+      "description": "Allows Databricks to deliver audit logs to a customer-managed S3 bucket. Created conditionally when audit log delivery is enabled.",
+      "type": "audit-log-delivery",
+      "trust_entity": "Databricks AWS Account (with for_log_delivery flag)",
+      "attached_policies": [],
+      "notes": "No inline policy attached; access is granted via S3 bucket policy on the audit log bucket.",
+      "source_module": "complete-workspace-custom (module.iam_role_audit_log_delivery)"
+    },
+    {
+      "role_name": "${resource_prefix}-catalog-role",
+      "description": "Unity Catalog IAM role providing S3 and KMS access for the catalog storage credential. Allows Databricks Unity Catalog to read/write catalog data.",
+      "type": "unity-catalog",
+      "trust_entity": "Self-assume + Databricks Unity Catalog Master Role (arn:aws:iam::414351767826:role/unity-catalog-prod-UCMasterRole-14S5ZJVKOTYTL)",
+      "attached_policies": [
+        "${resource_prefix}-unity-catalog-policy"
+      ],
+      "source_module": "complete-workspace-custom (module.iam_role_unity_catalog)"
+    }
+  ]
+}
