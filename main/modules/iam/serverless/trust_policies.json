@@ -1,0 +1,5 @@
+{
+  "description": "Trust policies for Databricks Serverless workspace deployment",
+  "trust_policies": [],
+  "notes": "Databricks Serverless deployments do not create customer-managed IAM roles, therefore no trust policies (assume role policies) are required. Access is controlled through S3 bucket policies and KMS key policies which use the Databricks AWS account as a principal with PrincipalTag-based conditions for account scoping."
+}
