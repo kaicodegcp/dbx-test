@@ -52,7 +52,7 @@ variable "databricks_gov_shard" {
   default     = null
 
   validation {
-    condition     = var.databricks_gov_shard == null || can(contains(["civilian", "dod"], var.databricks_gov_shard))
+    condition     = var.databricks_gov_shard == null || contains(["civilian", "dod"], var.databricks_gov_shard)
     error_message = "Allowed values: null, civilian, dod."
   }
 }
